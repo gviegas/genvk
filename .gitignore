@@ -1,0 +1,5 @@
+*.o
+*.out
+vk.xml
+main.c
+main.cpp
