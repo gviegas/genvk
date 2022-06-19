@@ -325,7 +325,7 @@ def gen_commands(registry):
     """Returns a list containing a Command for every proc in the registry."""
     cmds = registry.find("commands")
     if cmds is None:
-        print("bad xml file: 'commands' element not found")
+        print("[!] bad xml file: 'commands' element not found")
         exit()
     objs = []
     for cmd in cmds.findall("command"):
@@ -341,7 +341,7 @@ def gen_version(registry):
     """Returns a Version instance identifying the header version."""
     types = registry.find("types")
     if types is None:
-        print("bad xml file: 'types' element not found")
+        print("[!] bad xml file: 'types' element not found")
         exit()
     return Version(types)
 
@@ -350,8 +350,8 @@ def gen(pathname, oflag):
     """Generates the proc files from the given vk.xml registry."""
     tree = xml.etree.ElementTree.parse(pathname)
     root = tree.getroot()
-    if root is None or root.tag != "registry":
-        print("bad xml file")
+    if root.tag != "registry":
+        print("[!] bad xml file: unexpected root element '" + root.tag + "'")
         exit()
     commands = gen_commands(root)
     version = gen_version(root)
