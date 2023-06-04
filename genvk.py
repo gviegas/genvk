@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # Created by Gustavo C. Viegas.
-# Last change: 2022/oct.
+# Last change: 2023/jun.
 
 import xml.etree.ElementTree
 import sys
@@ -126,7 +126,7 @@ class Extension:
         "vkCreateSwapchainKHR",
         "vkDestroySwapchainKHR",
         "vkGetSwapchainImagesKHR",
-        "vkQueuePresentKHR"
+        "vkQueuePresentKHR",
         ]
 
     NAMES_WAYLAND = [
@@ -138,13 +138,13 @@ class Extension:
     NAMES_WIN32 = [
         # From VK_KHR_win32_surface:
         "vkCreateWin32SurfaceKHR",
-        "vkGetPhysicalDeviceWin32PresentationSupportKHR"
+        "vkGetPhysicalDeviceWin32PresentationSupportKHR",
         ]
 
     NAMES_XCB = [
-        # From VK_KHR_xbc_surface:
+        # From VK_KHR_xcb_surface:
         "vkCreateXcbSurfaceKHR",
-        "vkGetPhysicalDeviceXcbPresentationSupportKHR"
+        "vkGetPhysicalDeviceXcbPresentationSupportKHR",
         ]
 
 
@@ -329,6 +329,11 @@ def gen_commands(registry):
         exit()
     objs = []
     for cmd in cmds.findall("command"):
+        try:
+            if cmd.attrib["api"] != "vulkan":
+                continue
+        except KeyError:
+            pass
         proto = cmd.find("proto")
         if proto is None:
             continue
