@@ -5,6 +5,7 @@
 
 import xml.etree.ElementTree
 import sys
+import re
 from copy import deepcopy
 
 
@@ -51,7 +52,7 @@ class Command:
         return s
 
     class TypeName:
-        """ registry > commands > command > *elem* > type,name """
+        """registry > commands > command > *elem* > type,name."""
         def __init__(self, elem):
             name = elem.find("name")
             assert(name is not None and name.text is not None)
@@ -70,7 +71,7 @@ class Command:
             return self.typ + " " + self.name
 
     class Proto(TypeName):
-        """ registry > commands > command > proto """
+        """registry > commands > command > proto."""
         pass
 
     class Param(TypeName):
@@ -147,6 +148,16 @@ class Extension:
         "vkCreateXcbSurfaceKHR",
         "vkGetPhysicalDeviceXcbPresentationSupportKHR",
         ]
+
+
+# TODO: Currently, this is only used for filtering non-core commands.
+class Feature:
+    """registry > feature."""
+    def __init__(self, feature):
+        assert(feature.tag == "feature")
+        self.name = feature.attrib["name"]
+        self.cmds = [x.get("name") for x in feature.findall("./require/command")]
+        self.noncore = re.match(r"(^|(.+,))vulkan((,.+)|$)", feature.get("api")) is None
 
 
 class Version:
@@ -324,40 +335,44 @@ def gen_procs(commands, as_decls):
 
 def gen_commands(registry):
     """Returns a list containing Commands from the registry."""
+    noncore_feats = [x for x in [Feature(x) for x in registry.findall("feature")] if x.noncore]
+    noncore_cmds = frozenset()
+    for feat in noncore_feats:
+        noncore_cmds = noncore_cmds.union(feat.cmds)
+
     cmds = registry.find("commands")
     if cmds is None:
         print("[!] bad xml file: 'commands' element not found")
         exit()
     each_cmd = cmds.findall("command")
+
     aliases = {}
     for cmd in each_cmd:
-        try:
-            if cmd.attrib["api"] != "vulkan":
-                continue
-        except KeyError:
-            pass
-        try:
+        if cmd.get("api") not in (None, "vulkan"):
+            continue
+        alias = cmd.get("alias")
+        name = cmd.get("name")
+        if alias is not None and name is not None:
             # TODO: Do multiple aliases exist?
-            aliases[cmd.attrib["alias"]] = cmd.attrib["name"]
+            aliases[alias] = name
             # TODO: Remove element instead.
             assert(cmd.find("proto") is None)
-        except KeyError:
-            pass
+
     objs = []
     for cmd in each_cmd:
-        try:
-            if cmd.attrib["api"] != "vulkan":
-                continue
-        except KeyError:
-            pass
+        if cmd.get("api") not in (None, "vulkan"):
+            continue
         proto = cmd.find("proto")
         if proto is None:
             continue
         params = cmd.findall("param")
-        objs.append(Command(proto, params))
+        obj = Command(proto, params)
+        if obj.proto.name in noncore_cmds:
+            continue
+        objs.append(obj)
         try:
-            alias = aliases[objs[-1].proto.name]
-            cpy = deepcopy(objs[-1])
+            alias = aliases[obj.proto.name]
+            cpy = deepcopy(obj)
             cpy.proto.name = alias
             objs.append(cpy)
         except KeyError:
