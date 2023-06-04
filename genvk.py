@@ -5,6 +5,7 @@
 
 import xml.etree.ElementTree
 import sys
+from copy import deepcopy
 
 
 class Command:
@@ -322,13 +323,28 @@ def gen_procs(commands, as_decls):
 
 
 def gen_commands(registry):
-    """Returns a list containing a Command for every proc in the registry."""
+    """Returns a list containing Commands from the registry."""
     cmds = registry.find("commands")
     if cmds is None:
         print("[!] bad xml file: 'commands' element not found")
         exit()
+    each_cmd = cmds.findall("command")
+    aliases = {}
+    for cmd in each_cmd:
+        try:
+            if cmd.attrib["api"] != "vulkan":
+                continue
+        except KeyError:
+            pass
+        try:
+            # TODO: Do multiple aliases exist?
+            aliases[cmd.attrib["alias"]] = cmd.attrib["name"]
+            # TODO: Remove element instead.
+            assert(cmd.find("proto") is None)
+        except KeyError:
+            pass
     objs = []
-    for cmd in cmds.findall("command"):
+    for cmd in each_cmd:
         try:
             if cmd.attrib["api"] != "vulkan":
                 continue
@@ -339,6 +355,13 @@ def gen_commands(registry):
             continue
         params = cmd.findall("param")
         objs.append(Command(proto, params))
+        try:
+            alias = aliases[objs[-1].proto.name]
+            cpy = deepcopy(objs[-1])
+            cpy.proto.name = alias
+            objs.append(cpy)
+        except KeyError:
+            pass
     return objs
 
 
@@ -359,7 +382,8 @@ def gen(pathname, oflag):
         print("[!] bad xml file: unexpected root element '" + root.tag + "'")
         exit()
     commands = gen_commands(root)
-    version = gen_version(root)
+    # TODO: Version decoding is broken.
+    version = "x.x.x" #gen_version(root)
     with open("vk.h", oflag) as f:
         procs = gen_procs(commands, True)
         getters = gen_getters(commands, True)
