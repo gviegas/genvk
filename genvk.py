@@ -167,7 +167,7 @@ class Version:
         self.major = ""
         self.minor = ""
         self.patch = ""
-        defs = types.findall("./type[@category='define']")
+        defs = types.findall("./type[@api='vulkan'][@category='define']")
         for d in defs:
             name = d.find("name")
             if name is None:
@@ -397,8 +397,7 @@ def gen(pathname, oflag):
         print("[!] bad xml file: unexpected root element '" + root.tag + "'")
         exit()
     commands = gen_commands(root)
-    # TODO: Version decoding is broken.
-    version = "x.x.x" #gen_version(root)
+    version = gen_version(root)
     with open("vk.h", oflag) as f:
         procs = gen_procs(commands, True)
         getters = gen_getters(commands, True)
