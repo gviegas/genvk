@@ -1,6 +1,6 @@
 *.o
 *.out
 out/
-vk.c
+vk.cpp
 vk.h
 vk.xml
