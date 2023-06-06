@@ -433,7 +433,7 @@ def gen_lib():
         cpl = ["c++", "-O2", "-c"]
         subprocess.run(cpl + [DLVK_CPP], check=True)
         subprocess.run(cpl + [VK_CPP], check=True)
-        subprocess.run(["ar", "rcsl", "-ldl", VK_LIB, DLVK_OBJ, VK_OBJ], check=True)
+        subprocess.run(["ar", "rcs", VK_LIB, DLVK_OBJ, VK_OBJ], check=True)
     else:
         # TODO
         print("[!] gen_lib not yet implemented for " + os.name)
