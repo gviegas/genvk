@@ -215,7 +215,8 @@ extern "C" {{
 //  1. Call getGlobalProcsVK and check that vkGetInstanceProcAddr is valid;
 //  2. Create a valid VkInstance and call getInstanceProcsVK;
 //  3. Create a valid VkDevice and call getDeviceProcsVK;
-//  4. [TODO] Call clearProcsVK before exiting.
+//  4. Call clearProcsVK before exiting.
+{}
 {}
 
 #ifdef __cplusplus
@@ -237,10 +238,21 @@ void* initVK();
 void deinitVK();
 
 {}
+{}
 """
 
 
 INDENT = "    "
+
+
+INIT_CALL = """vkGetInstanceProcAddr = reinterpret_cast<PFN_vkGetInstanceProcAddr>(initVK());
+{0}if (!vkGetInstanceProcAddr)
+{0}{0}return;
+""".format(INDENT)
+
+
+DEINIT_CALL = """deinitVK();
+"""
 
 
 DLVK_CPP = "dlvk.cpp"
@@ -249,13 +261,6 @@ VK_CPP = "vk.cpp"
 VK_OBJ = "vk.o"
 VK_H = "vk.h"
 VK_LIB = "vk.lib"
-
-
-def gen_init_call():
-    return """vkGetInstanceProcAddr = reinterpret_cast<PFN_vkGetInstanceProcAddr>(initVK());
-    if (!vkGetInstanceProcAddr)
-    {}return;
-""".format(INDENT)
 
 
 def gen_getters(commands, as_decls):
@@ -267,7 +272,7 @@ def gen_getters(commands, as_decls):
         return globl + inst + dev
 
     fp = INDENT + "PFN_vkVoidFunction fp = nullptr;\n"
-    globl = "void getGlobalProcsVK() {\n" + INDENT + gen_init_call() + fp
+    globl = "void getGlobalProcsVK() {\n" + INDENT + INIT_CALL + fp
     inst = "void getInstanceProcsVK(VkInstance h) {\n" + fp
     dev = "void getDeviceProcsVK(VkDevice h) {\n" + fp
     gext = {}
@@ -325,33 +330,45 @@ def gen_getters(commands, as_decls):
             dev += cmd.ext.GUARDS[k][0] + v + cmd.ext.GUARDS[k][1]
     globl += "}\n\n"
     inst += "}\n\n"
-    dev += "}"
+    dev += "}\n"
     return globl + inst + dev
 
 
-def gen_procs(commands, as_decls):
-    """Returns a string containing the proc variables."""
+def gen_procs(commands, proc_fmt):
+    """Returns a string containing the formatted procs."""
     procs = ""
     exts = {}
-    fmt = "extern PFN_{} {};\n" if as_decls else "PFN_{} {} = nullptr;\n"
     for cmd in commands:
         name = cmd.proto.name
         if not name.startswith("vk"):
             continue
         if not cmd.isext:
-            procs += fmt.format(name, name)
+            procs += proc_fmt.format(name)
             continue
         categ = cmd.ext.category
         if categ == Extension.NA:
             continue
         if not categ in exts:
             exts[categ] = ""
-        exts[categ] += fmt.format(name, name)
+        exts[categ] += proc_fmt.format(name)
     items = exts.items()
     for (k, v) in items:
         if v != "":
             procs += cmd.ext.GUARDS[k][0] + v + cmd.ext.GUARDS[k][1]
     return procs
+
+
+def gen_vars(commands, as_decls):
+    """Returns a string containing the proc variables."""
+    return gen_procs(commands, "extern PFN_{0} {0};\n" if as_decls else "PFN_{0} {0} = nullptr;\n")
+
+
+def gen_clear(commands, as_decl):
+    """Returns a string containing the proc clearing function."""
+    if as_decl:
+        return "void clearProcsVK(void);"
+    procs = gen_procs(commands, INDENT + "{} = nullptr;\n")
+    return "void clearProcsVK() {\n" + procs + INDENT + DEINIT_CALL + "}"
 
 
 def gen_commands(registry):
@@ -436,13 +453,15 @@ def gen(xml_path):
         cwd = os.getcwd()
         os.chdir(tmpdir)
         with open(VK_H, "w") as f:
-            procs = gen_procs(commands, True)
+            vars = gen_vars(commands, True)
             getters = gen_getters(commands, True)
-            f.write(HEADER.format(version, procs, getters))
+            clear = gen_clear(commands, True)
+            f.write(HEADER.format(version, vars, getters, clear))
         with open(VK_CPP, "w") as f:
-            procs = gen_procs(commands, False)
+            vars = gen_vars(commands, False)
             getters = gen_getters(commands, False)
-            f.write(SOURCE.format(version, procs, getters))
+            clear = gen_clear(commands, False)
+            f.write(SOURCE.format(version, vars, getters, clear))
         os.link(os.path.join(cwd, DLVK_CPP), os.path.join(tmpdir, DLVK_CPP))
         gen_lib()
         os.chdir(cwd)
