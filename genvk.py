@@ -132,6 +132,50 @@ class Extension:
         "vkDestroySwapchainKHR",
         "vkGetSwapchainImagesKHR",
         "vkQueuePresentKHR",
+        # From VK_KHR_copy_commands2 (core in v1.3):
+        "vkCmdBlitImage2KHR",
+        "vkCmdCopyBuffer2KHR",
+        "vkCmdCopyBufferToImage2KHR",
+        "vkCmdCopyImage2KHR",
+        "vkCmdCopyImageToBuffer2KHR",
+        "vkCmdResolveImage2KHR",
+        # From VK_KHR_dynamic_rendering (core in v1.3):
+        "vkCmdBeginRenderingKHR",
+        "vkCmdEndRenderingKHR",
+        # From VK_KHR_synchronization2 (core in v1.3):
+        "vkCmdPipelineBarrier2KHR",
+        "vkCmdResetEvent2KHR",
+        "vkCmdSetEvent2KHR",
+        "vkCmdWaitEvents2KHR",
+        "vkCmdWriteTimestamp2KHR",
+        "vkQueueSubmit2KHR",
+        # From VK_KHR_buffer_device_address (core in v1.2 (optional) & v1.3):
+        "vkGetBufferDeviceAddressKHR",
+        "vkGetBufferOpaqueCaptureAddressKHR",
+        "vkGetDeviceMemoryOpaqueCaptureAddressKHR",
+        # From VK_KHR_create_renderpass2 (core in v1.2):
+        "vkCmdBeginRenderPass2KHR",
+        "vkCmdEndRenderPass2KHR",
+        "vkCmdNextSubpass2KHR",
+        "vkCreateRenderPass2KHR",
+        # From VK_KHR_device_group (core in v1.1):
+        "vkCmdDispatchBaseKHR",
+        "vkCmdSetDeviceMaskKHR",
+        "vkGetDeviceGroupPeerMemoryFeaturesKHR",
+        "vkGetDeviceGroupPresentCapabilitiesKHR",
+        "vkGetDeviceGroupSurfacePresentModesKHR",
+        "vkGetPhysicalDevicePresentRectanglesKHR",
+        "vkAcquireNextImage2KHR",
+        # From VK_KHR_device_group_creation (core in v1.1):
+        "vkEnumeratePhysicalDeviceGroupsKHR",
+        # From VK_KHR_get_physical_device_properties2 (core in v1.1):
+        "vkGetPhysicalDeviceFeatures2KHR",
+        "vkGetPhysicalDeviceFormatProperties2KHR",
+        "vkGetPhysicalDeviceImageFormatProperties2KHR",
+        "vkGetPhysicalDeviceMemoryProperties2KHR",
+        "vkGetPhysicalDeviceProperties2KHR",
+        "vkGetPhysicalDeviceQueueFamilyProperties2KHR",
+        "vkGetPhysicalDeviceSparseImageFormatProperties2KHR",
         ]
 
     NAMES_WAYLAND = [
