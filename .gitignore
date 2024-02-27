@@ -5,3 +5,4 @@ vk.cpp
 vk.h
 vk.lib
 vk.xml
+.clang-format

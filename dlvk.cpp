@@ -4,17 +4,18 @@
 
 namespace {
 #if defined(__linux__)
-    const char* lib = "libvulkan.so.1";
+const char* lib = "libvulkan.so.1";
 #else
-# error not implemented
+#error Not implemented
 #endif
-    const char* sym = "vkGetInstanceProcAddr";
+const char* sym = "vkGetInstanceProcAddr";
 
-    void* hdl = nullptr;
-    void* proc = nullptr;
+void* hdl = nullptr;
+void* proc = nullptr;
 }
 
-void* initVK() {
+void* initVK()
+{
     if (!hdl) {
         hdl = dlopen(lib, RTLD_LAZY | RTLD_LOCAL);
         if (!hdl)
@@ -28,7 +29,8 @@ void* initVK() {
     return proc;
 }
 
-void deinitVK() {
+void deinitVK()
+{
     if (hdl) {
         dlclose(hdl);
         hdl = nullptr;
