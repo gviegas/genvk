@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 
 # Created by Gustavo C. Viegas.
-# Last change: 2024/feb.
+# Last change: 2024/aug.
 
 from copy import deepcopy
 import os
 import re
+import shutil
 import subprocess
 import sys
 from tempfile import TemporaryDirectory
@@ -514,11 +515,11 @@ def gen(xml_path):
             getters = gen_getters(commands, False)
             clear = gen_clear(commands, False)
             f.write(SOURCE.format(version, vars, getters, clear))
-        os.link(os.path.join(cwd, DLVK_CPP), os.path.join(tmpdir, DLVK_CPP))
+        shutil.copy(os.path.join(cwd, DLVK_CPP), DLVK_CPP)
         gen_lib()
         os.chdir(cwd)
-        os.rename(os.path.join(tmpdir, VK_H), os.path.join(cwd, VK_H))
-        os.rename(os.path.join(tmpdir, VK_LIB), os.path.join(cwd, VK_LIB))
+        shutil.copy(os.path.join(tmpdir, VK_H), VK_H)
+        shutil.copy(os.path.join(tmpdir, VK_LIB), VK_LIB)
         fmt_vk_h()
 
 
