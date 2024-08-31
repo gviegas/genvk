@@ -3,7 +3,9 @@
 // XXX: Not thread-safe.
 
 namespace {
-#if defined(__linux__)
+#if defined(__ANDROID__)
+const char* lib = "libvulkan.so";
+#elif defined(__linux__)
 const char* lib = "libvulkan.so.1";
 #else
 #error Not implemented
