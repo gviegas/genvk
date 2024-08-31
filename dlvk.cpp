@@ -1,6 +1,25 @@
-#include <dlfcn.h>
-
 // XXX: Not thread-safe.
+
+namespace { const char* sym = "vkGetInstanceProcAddr"; }
+
+#ifdef _WIN32
+
+#include <windows.h>
+
+namespace {
+const char* lib = "vulkan-1.dll";
+
+HMODULE hdl = nullptr;
+FARPROC proc = nullptr;
+
+void setHdl() { hdl = LoadLibrary(lib); }
+void setProc() { proc = GetProcAddress(hdl, sym); }
+void closeLib() { FreeLibrary(hdl); }
+}
+
+#else
+
+#include <dlfcn.h>
 
 namespace {
 #if defined(__ANDROID__)
@@ -10,31 +29,36 @@ const char* lib = "libvulkan.so.1";
 #else
 #error Not implemented
 #endif
-const char* sym = "vkGetInstanceProcAddr";
 
 void* hdl = nullptr;
 void* proc = nullptr;
+
+void setHdl() { hdl = dlopen(lib, RTLD_LAZY | RTLD_LOCAL); }
+void setProc() { proc = dlsym(hdl, sym); }
+void closeLib() { dlclose(hdl); }
 }
+
+#endif
 
 void* initVK()
 {
     if (!hdl) {
-        hdl = dlopen(lib, RTLD_LAZY | RTLD_LOCAL);
+        setHdl();
         if (!hdl)
             return nullptr;
     }
     if (!proc) {
-        proc = dlsym(hdl, sym);
+        setProc();
         if (!proc)
             return nullptr;
     }
-    return proc;
+    return reinterpret_cast<void*>(proc);
 }
 
 void deinitVK()
 {
     if (hdl) {
-        dlclose(hdl);
+        closeLib();
         hdl = nullptr;
         proc = nullptr;
     }
